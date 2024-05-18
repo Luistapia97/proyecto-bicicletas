@@ -1,0 +1,88 @@
+﻿@page "/bicicletas/nueva"
+@page "/bicicletas/editar/{Id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager _navigator;
+@inject IRepositorioBicicletas _repositorio;
+<h2>@_mensaje Bicicleta</h2>
+<EditForm Model="_bicicleta" FormName="frmBicicleta" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="row mb-3">
+        <label for="txtColor" class="col-2 col-form-label">Color</label>
+        <div class="col-10">
+            <InputSelect class="form-select" @bind-Value="_bicicleta.Color">
+                <option value="0" enabled="enabled">Seleccione el color...</option>
+                <option value="Rojo">Rojo</option>
+                <option value="Blanco">Blanco</option>
+                <option value="Negro">Negro</option>
+                <option value="Azul">Azul</option>
+            </InputSelect>
+            <ValidationMessage For="()=>_bicicleta.Color" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtTipo" class="col-2 col-form-label">Tipo</label>
+        <div class="col-10">
+            <InputSelect class="form-select" @bind-Value="_bicicleta.Tipo">
+                <option value="0" enabled="enabled">Seleccione el tipo de bicicleta...</option>
+                <option value="Normal">Normal</option>
+                <option value="Montaña">Montaña</option>
+                <option value="De paseo">De paseo</option>
+                <option value="Para Niño">Para Niño</option>
+                <option value="Electricas">Electricas</option>
+            </InputSelect>
+            <ValidationMessage For="()=>_bicicleta.Tipo" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtEstado" class="col-2 col-form-label">Estado</label>
+        <div class="col-10">
+            <InputSelect class="form-select" @bind-Value="_bicicleta.Estado">
+                <option value="0" enabled="enabled">Seleccione el estado...</option>
+                <option value="Disponible">Disponible</option>
+                <option value="En espera">En espera</option>
+            </InputSelect>
+            <ValidationMessage For="()=>_bicicleta.Estado" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button class="btn btn-danger ms-3" @onclick="Cancelar" @onclick:preventDefault>Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private string _mensaje = "";
+    private Bicicleta? _bicicleta = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id > 0)
+        {
+            _bicicleta = await _repositorio.Get(Id);
+            _mensaje = "Modificar";
+        }
+        else
+        {
+            _mensaje = "Nueva";
+        }
+    }
+
+    private async void Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorio.Update(Id, _bicicleta!);
+        }
+        else
+        {
+            await _repositorio.Add(_bicicleta!);
+        }
+        Cancelar();
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/bicicletas");
+    }
+}

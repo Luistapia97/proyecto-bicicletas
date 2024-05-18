@@ -1,0 +1,104 @@
+﻿@page "/alquileres/nueva"
+@page "/alquileres/editar/{Id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager _navigator;
+@inject IRepositorioAlquileres _repositorio;
+@inject IRepositorioBicicletas _repoBici;
+@inject IRepositorioPersonas _repoPersona;
+<h2>@_mensaje Renta De Alquiler</h2>
+<EditForm Model="_alquiler" FormName="frmAlquiler" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="row mb-3">
+        <label for="txtFechaInicio" class="col-2 col-form-label">Fecha Inicio</label>
+        <div class="col-10">
+            <input type="date" id="txtFechaInicio" class="form-control" @bind="_alquiler.FechaInicio" />
+            <ValidationMessage For="()=>_alquiler.FechaInicio" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtFechaFin" class="col-2 col-form-label">Fecha Fin</label>
+        <div class="col-10">
+            <input type="date" id="txtFecha" class="form-control" @bind="_alquiler.FechaFin" />
+            <ValidationMessage For="()=>_alquiler.FechaFin" />
+        </div>
+    </div>
+    <InputSelect class="form-select" @bind-Value="_bici">
+        <option enabled="enabled">Selecciona tu id</option>
+        @foreach (Bicicleta bici in _bicicletas)
+        {
+
+            <option value="@bici.Id">@bici.Id</option>
+
+        }
+    </InputSelect>
+    <InputSelect class="form-select" @bind-Value="_persona">
+        <option  enabled="enabled">Selecciona tu usuario</option>
+        @foreach (Persona person in _Persona)
+        {
+
+            <option value="@person.Id">Persona:@person.Correo</option>
+
+        }
+    </InputSelect>
+    <InputSelect class="form-select" @bind-Value="_bici">
+        <option value="0" enabled="enabled">Seleccione una bicicleta</option>
+        @foreach (Bicicleta bici in _bicicletas)
+        {
+
+            <option value="@bici.Id">Bicicleta:@bici.Id Tipo:@bici.Tipo</option>
+
+        }
+    </InputSelect>
+
+    <button type="submit" class="btn btn-primary">Alquilar</button>
+    <button class="btn btn-danger ms-3" @onclick="Cancelar" @onclick:preventDefault>Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private string _mensaje = "";
+    private Alquiler? _alquiler = new();
+    private int _persona;
+    private int _bici;
+    private List<Persona>? _Persona = new();
+    private List<Bicicleta>? _bicicletas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _Persona = await _repoPersona.GetAll();
+        _bicicletas = await _repoBici.GetAll();
+        if (Id > 0)
+        {
+            _alquiler = await _repositorio.Get(Id);
+
+            _mensaje = "Modificar";
+        }
+        else
+        {
+            _mensaje = "Nueva";
+        }
+    }
+
+    private async void Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorio.Update(Id, _alquiler!);
+        }
+        else
+        {
+
+            _alquiler.Bicicleta = await  _repoBici.Get(_bici);
+            _alquiler.Persona = await _repoPersona.Get(_persona);
+            await _repositorio.Add(_alquiler!);
+        }
+        Cancelar();
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/alquileres");
+    }
+}
+
